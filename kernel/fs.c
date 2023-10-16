@@ -676,6 +676,7 @@ namex(char *path, int nameiparent, char *name)
     iunlockput(ip);
     ip = next;
   }
+
   if(nameiparent){
     iput(ip);
     return 0;

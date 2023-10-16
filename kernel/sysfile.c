@@ -301,6 +301,7 @@ create(char *path, short type, short major, short minor)
   return 0;
 }
 
+// fd = sys_open(const char* pathname, int omode);
 uint64
 sys_open(void)
 {
@@ -431,6 +432,11 @@ sys_chdir(void)
   return 0;
 }
 
+// 参数0
+// 参数1 char* argv[]
+//  argv[0] = address of (char *) "arg0";
+//  argv[1] = address of (char *) "arg1";
+
 uint64
 sys_exec(void)
 {
@@ -447,6 +453,7 @@ sys_exec(void)
     if(i >= NELEM(argv)){
       goto bad;
     }
+    // uarg是用户空间某个参数的虚拟地址
     if(fetchaddr(uargv+sizeof(uint64)*i, (uint64*)&uarg) < 0){
       goto bad;
     }
@@ -457,6 +464,7 @@ sys_exec(void)
     argv[i] = kalloc();
     if(argv[i] == 0)
       goto bad;
+    // fetchstr(uint64 addr(用户虚拟地址), char *buf(内核地址), int max)
     if(fetchstr(uarg, argv[i], PGSIZE) < 0)
       goto bad;
   }

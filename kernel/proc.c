@@ -19,6 +19,7 @@ extern void forkret(void);
 static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
+extern pagetable_t kernel_pagetable;
 
 // helps ensure that wakeups of wait()ing
 // parents are not lost. helps obey the
@@ -145,6 +146,8 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
+  // p->trapframe->kernel_satp = (uint64)kernel_pagetable; 
+  p->trapframe->kernel_satp = r_satp();
 
   return p;
 }
@@ -335,7 +338,13 @@ reparent(struct proc *p)
   for(pp = proc; pp < &proc[NPROC]; pp++){
     if(pp->parent == p){
       pp->parent = initproc;
-      wakeup(initproc);
+      wakeup(initproc); 
+      /*
+      *  这里进程的child可能已经exit了，但是进程并没有调用wait
+      *  进行清理，因为child已经退出，不能再次调用wakeup().
+      *  所以这里需要手动替代child调用wakeup()，来让initproc
+      *  去完成本该由进程调用wait()来完成的任务.
+      */
     }
   }
 }

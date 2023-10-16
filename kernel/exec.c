@@ -55,13 +55,15 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
-    if(ph.memsz < ph.filesz)
+    if(ph.memsz < ph.filesz) // memsz 只能大于filesz, 多出来的部分都是0 (maybe is stack)
       goto bad;
-    if(ph.vaddr + ph.memsz < ph.vaddr)
+    if(ph.vaddr + ph.memsz < ph.vaddr) // memsz和addr都是无符号整数，两者相加可能会overflow
       goto bad;
-    if(ph.vaddr % PGSIZE != 0)
+    if(ph.vaddr % PGSIZE != 0) // xv6假设所有的段的都是页面对其的
       goto bad;
     uint64 sz1;
+
+    //        uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz, flags2perm(ph.flags))) == 0)
       goto bad;
     sz = sz1;
@@ -164,3 +166,10 @@ loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz
   
   return 0;
 }
+
+
+/*
+*  exec(const char *path{"/usr/bin/cat"}, char **argv);
+*  argv[]指针数组中的指针指向的是用户虚拟地址空间的地址。
+*   
+*/
