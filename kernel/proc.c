@@ -467,6 +467,9 @@ scheduler(void)
         c->proc = 0;
       }
       release(&p->lock);
+      if (mycpu()->noff != 0) {
+        panic("scheduler interrupt off");
+      }
     }
   }
 }
@@ -494,6 +497,21 @@ sched(void)
     panic("sched interruptible");
 
   intena = mycpu()->intena;
+  // the intena is refere to the interrupt status before call push_off().
+  // so it may be true or false.
+  
+
+  // when the intena of the current thread is enable? and when it is disable?
+  // A:
+  // 1. if the sched is called from a syscall.
+  // syscall-> enable interrupt -> call sleep() -> sched()
+  // from this situation, the intena is ture (I think)
+  // 2. if the sched is called from timer interrupt -> yield() -> sched()
+  // from this situation, the intena is false. 
+  
+  // but why we need save it, and restore it?
+  // A: because the mycpu()->intena is the property of this kernel thread, as previous say.
+  
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
 }
