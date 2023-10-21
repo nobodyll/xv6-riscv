@@ -335,6 +335,15 @@ reparent(struct proc *p)
   for(pp = proc; pp < &proc[NPROC]; pp++){
     if(pp->parent == p){
       pp->parent = initproc;
+      // Q: what is the condition lock? 
+      // A: wait_lock
+      // Q: what is wakeup's condition? 
+      // A: initproc maybe have ZOMEBIE child to handle right now.
+      // Qwhy we need hold the wait_lock?
+      // A: initproc is sleep on chan(initproc) and waiting for someone 
+      //    give him child to deal with.
+      // Q: Does this lock is used to procted the relationship between child and parent?
+      // 
       wakeup(initproc);
     }
   }
@@ -594,6 +603,12 @@ wakeup(void *chan)
       }
       release(&p->lock);
     }
+    // else if (p == myproc()) {
+    // does p->state can equal SLEEPING?
+    // I think is not, so why we need have a check for 
+    // if (p == myproc())
+    // }
+    //
   }
 }
 
