@@ -84,7 +84,7 @@ $U/initcode: $U/initcode.S
 	$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode
 	$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm
 
-tags: $(OBJS) _init
+tags: $(OBJS) $U/_init
 	etags *.S *.c
 
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
@@ -99,6 +99,15 @@ $U/usys.S : $U/usys.pl
 
 $U/usys.o : $U/usys.S
 	$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S
+
+$K/entry.o : $K/entry.S
+	$(CC) $(CFLAGS) -c -o $K/entry.o $K/entry.S
+
+$K/swtch.o : $K/swtch.S
+	$(CC) $(CFLAGS) -c -o $K/swtch.o $K/swtch.S
+
+$K/trampoline.o : $K/trampoline.S
+	$(CC) $(CFLAGS) -c -o $K/trampoline.o $K/trampoline.S
 
 $U/_forktest: $U/forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
@@ -132,6 +141,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_spin\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
